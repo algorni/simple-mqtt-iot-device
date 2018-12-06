@@ -328,3 +328,6 @@ ASALocalRun/
 
 # MFractors (Xamarin productivity tool) working folder 
 .mfractor/
+
+#Ingore configuration file (app spcific) used for quick & dirty tests
+*.test.json
