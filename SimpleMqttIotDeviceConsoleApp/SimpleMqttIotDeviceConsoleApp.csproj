@@ -12,10 +12,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\IotHubSdkless\IotHubSdkless.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
     <None Update="appsettings.test..json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
