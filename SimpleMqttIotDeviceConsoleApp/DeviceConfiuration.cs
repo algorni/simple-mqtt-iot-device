@@ -9,8 +9,6 @@ namespace IotHubSdkless
         public string IoTHubBrokerHostname { get; set; }
         public int IoTHubBrokerPort { get; set; }
 
-        public string IoTHubCertificatePath { get; set; }
-
         public string DeviceCertificatePath { get; set; }
     }
 }
