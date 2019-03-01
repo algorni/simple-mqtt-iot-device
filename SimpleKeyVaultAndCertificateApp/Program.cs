@@ -124,13 +124,15 @@ namespace SimpleKeyVaultAndCertificateApp
                         string signingCertificateName = args[1];
                         string verificationCode = args[2];
 
+                    
+
                         X509Certificate2 signingCertificate = IoTCertificateHelper.IoTCertificateHelper.GetCertificateFromVault(keyVaultClient, vaultBaseUrl, signingCertificateName);
 
                         //Generate teh RSA Key (just generate and then throw away)
                         RSA verificationCodeKey = RSA.Create(2048);
 
                         var verificationCodeCSR = IoTCertificateHelper.IoTCertificateHelper.CreateCSR(verificationCodeKey, verificationCode, false);
-
+                        
                         now = DateTimeOffset.UtcNow;
 
                         byte[] verificationCodeSerialNumber = IoTCertificateHelper.IoTCertificateHelper.GenerateSerialNumberFromCN(verificationCode);
@@ -154,20 +156,44 @@ namespace SimpleKeyVaultAndCertificateApp
                         string deviceId = args[1];
                         string signingCertificateName = args[2];
 
+                        /* ***** This part should be done on the device side...    the deivce should send just the CSR ***** */
+                        
                         X509Certificate2 signingCertificate = IoTCertificateHelper.IoTCertificateHelper.GetCertificateFromVault(keyVaultClient, vaultBaseUrl, signingCertificateName);
 
                         //Now generate keys and sign the certificate for a device using the intermediate
 
                         RSA deviceKey = IoTCertificateHelper.IoTCertificateHelper.CreateRSAKeysAndSaveInVault(keyVaultClient, vaultBaseUrl, deviceId);
 
-                        CertificateRequest csr = IoTCertificateHelper.IoTCertificateHelper.CreateCSR(deviceKey, deviceId, false);
+                        var publicPortionOfDeviceKey = deviceKey.ExportParameters(false);
 
+                        /* *****  ***** */
+
+                        //Once device has generated its own RSA Key Pair it should send in some way from the production plant to the Cloud the PUBLIC PORTION ONLY 
+                        //of their KEYS
+
+                        //Then the cloud generate a proper Certificate Signing Request with the apprioprate CN for the device
+
+                        /* *****  ***** */
+
+                        RSA devicePublicKey = RSA.Create(publicPortionOfDeviceKey);
+
+                        //create the signing request
+                        CertificateRequest csrDeviceObj = IoTCertificateHelper.IoTCertificateHelper.CreateCSR(devicePublicKey, deviceId, false);
+                       
                         now = DateTimeOffset.UtcNow;
 
                         byte[] deviceSerialNumber =  IoTCertificateHelper.IoTCertificateHelper.GenerateSerialNumberFromCN(deviceId);
 
-                        X509Certificate2 deviceCertificate = IoTCertificateHelper.IoTCertificateHelper.RespondCSR(csr, deviceSerialNumber, signingCertificate, now, now.AddDays(90.0));
+                        X509Certificate2 deviceCertificate = IoTCertificateHelper.IoTCertificateHelper.RespondCSR(csrDeviceObj, deviceSerialNumber, signingCertificate, now, now.AddDays(90.0));
+                        
+                        /* *****  ***** */
 
+                        //Then the Cloud should send back the Device Certificate to the Device 
+
+                        //The device could merge the Certificate with the private part of their key pairs and store the certificate and keys securely
+
+                        /* *****  ***** */
+                        
                         //this will merge also the private key of the certificate!
                         X509Certificate2 fullDeviceCertificate = deviceCertificate.CopyWithPrivateKey(deviceKey);
 
